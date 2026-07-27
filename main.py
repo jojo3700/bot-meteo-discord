@@ -5,10 +5,9 @@ import google.generativeai as genai
 import discord
 from discord.ext import commands
 
-# --- REMPLACEZ CES 3 LIGNES AVEC VOS INFORMATIONS ---
-DISCORD_TOKEN = "VOTRE_TOKEN_BOT_DISCORD"   # Collez le Token de votre Bot Discord
-GEMINI_API_KEY = "VOTRE_CLE_API_GEMINI"     # Collez votre clé API Gemini
-ID_SALON_METEO = 123456789012345678         # Collez l'ID de votre salon météo (sans guillemets)
+DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+ID_SALON_METEO = int(os.environ.get("ID_SALON_METEO", "0"))
 
 # --- MINI-SERVEUR WEB POUR KEEP ALIVE RENDER ---
 app = Flask('')
