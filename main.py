@@ -5,27 +5,28 @@ import google.generativeai as genai
 import discord
 from discord.ext import commands
 
+# --- LECTURE SECURISEE DE VOS CLES VIA RENDER ---
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 ID_SALON_METEO = int(os.environ.get("ID_SALON_METEO", "0"))
 
-# --- MINI-SERVEUR WEB POUR KEEP ALIVE RENDER ---
+# --- MINI-SERVEUR WEB POUR MINTENIR EN VIE SUR RENDER ---
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot Discord Météo en cours d'exécution !"
+    return "Bot Météo en ligne !"
 
-def run_flask():
+def run():
     app.run(host='0.0.0.0', port=8080)
 
 def keep_alive():
-    t = Thread(target=run_flask)
+    t = Thread(target=run)
     t.start()
 
-# --- CONFIGURATION BOT & GEMINI ---
+# --- CONFIGURATION DE GEMINI ET DISCORD ---
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -39,6 +40,9 @@ async def on_ready():
 async def on_message(message):
     if message.author.bot:
         return
+
+    # TEST : Affiche TOUS les messages reçus dans les logs avec l'ID du salon
+    print(f"📩 Message reçu dans le salon [{message.channel.id}] par {message.author}: {message.content}")
 
     if message.channel.id == ID_SALON_METEO:
         prompt = f"""
@@ -57,7 +61,7 @@ async def on_message(message):
 
             if "NON" in reponse_ia:
                 await message.delete()
-                print(f"❌ Message hors-sujet supprimé de {message.author}: {message.content}")
+                print(f"❌ Message hors-sujet supprimé : {message.content}")
             else:
                 print(f"✅ Message météo conservé : {message.content}")
 
@@ -66,6 +70,6 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-# Lancement du serveur Web factice puis du bot
+# --- DÉMARRAGE DU BOT ET DU SERVEUR WEB ---
 keep_alive()
 bot.run(DISCORD_TOKEN)
