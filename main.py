@@ -2,9 +2,9 @@ import os
 import threading
 from flask import Flask
 import discord
-from google import genai
+import google.generativeai as genai
 
-# --- Webserver pour Render ---
+# --- Serveur Web Flask ---
 app = Flask('')
 
 @app.route('/')
@@ -19,12 +19,13 @@ threading.Thread(target=run_flask, daemon=True).start()
 
 # --- Configuration Gemini ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-ai_client = None
-
 if GEMINI_API_KEY:
-    ai_client = genai.Client(api_key=GEMINI_API_KEY)
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+else:
+    model = None
 
-# --- Bot Discord ---
+# --- Configuration Discord ---
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 
 intents = discord.Intents.default()
@@ -38,17 +39,15 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    # Ignorer les messages envoyés par le bot
     if message.author == client.user:
         return
 
     print(f"🔔 Message reçu de {message.author} : {message.content}")
 
-    if not ai_client:
-        print("⚠️ Pas de clé GEMINI_API_KEY configurée dans Render.")
+    if not model:
+        print("⚠️ Pas de clé GEMINI_API_KEY configurée.")
         return
 
-    # Prompt strict envoyé à Gemini
     prompt = f"""
     Tu es un modérateur strict pour un serveur Discord dédié exclusivement à la MÉTÉO.
     Message à analyser : "{message.content}"
@@ -61,10 +60,7 @@ async def on_message(message):
     """
 
     try:
-        response = ai_client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt
-        )
+        response = model.generate_content(prompt)
         decision = response.text.strip().upper()
         print(f"🤖 Décision Gemini pour '{message.content}' : {decision}")
 
@@ -75,6 +71,9 @@ async def on_message(message):
             print(f"✅ Message météo conservé !")
 
     except Exception as e:
-        print(f"❌ Erreur lors de la vérification Gemini : {e}")
+        print(f"❌ Erreur Gemini : {e}")
 
-client.run(DISCORD_TOKEN)
+if DISCORD_TOKEN:
+    client.run(DISCORD_TOKEN)
+else:
+    print("❌ ERREUR : Aucun DISCORD_TOKEN trouvé dans les variables d'environnement !")
