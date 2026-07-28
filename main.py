@@ -76,4 +76,4 @@ async def on_message(message):
 if DISCORD_TOKEN:
     client.run(DISCORD_TOKEN)
 else:
-    print("❌ ERREUR : Aucun DISCORD_TOKEN trouvé dans les variables d'environnement !")
+    print("❌ ERREUR : Aucun DISCORD_TOKEN trouvé !")
