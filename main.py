@@ -2,7 +2,7 @@ import os
 import threading
 from flask import Flask
 import discord
-import google.generativeai as genai
+from google import genai
 
 # --- Webserver pour Render ---
 app = Flask('')
@@ -19,9 +19,10 @@ threading.Thread(target=run_flask, daemon=True).start()
 
 # --- Configuration Gemini ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+ai_client = None
+
 if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    ai_client = genai.Client(api_key=GEMINI_API_KEY)
 
 # --- Bot Discord ---
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
@@ -43,7 +44,7 @@ async def on_message(message):
 
     print(f"🔔 Message reçu de {message.author} : {message.content}")
 
-    if not GEMINI_API_KEY:
+    if not ai_client:
         print("⚠️ Pas de clé GEMINI_API_KEY configurée dans Render.")
         return
 
@@ -60,7 +61,10 @@ async def on_message(message):
     """
 
     try:
-        response = model.generate_content(prompt)
+        response = ai_client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
         decision = response.text.strip().upper()
         print(f"🤖 Décision Gemini pour '{message.content}' : {decision}")
 
