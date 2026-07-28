@@ -47,14 +47,16 @@ async def on_message(message):
         print("⚠️ Pas de clé GEMINI_API_KEY configurée dans Render.")
         return
 
-    # Prompt envoyé à Gemini
+    # Prompt strict envoyé à Gemini
     prompt = f"""
-    Tu es un modérateur pour un serveur Discord sur la météo.
-    Analyse ce message : "{message.content}"
-    Est-ce que ce message parle de météo, de climat, de prévisions, de temps, de ciel, de température ou d'observations météo ?
-    Rends OUI si le message parle de météo.
-    Rends NON si le message ne parle PAS du tout de météo.
-    Affiche uniquement "OUI" ou "NON".
+    Tu es un modérateur strict pour un serveur Discord dédié exclusivement à la MÉTÉO.
+    Message à analyser : "{message.content}"
+
+    RÈGLES STRICTES :
+    - Réponds OUI SEULEMENT SI le message parle de temps, température, pluie, soleil, nuages, vent, prévisions, climat ou observations météorologiques.
+    - Réponds NON pour TOUT LE RESTE (salutations simples, discussions générales, questions hors-sujet, blagues, etc.).
+
+    Réponds UNIQUEMENT par le mot "OUI" ou "NON".
     """
 
     try:
