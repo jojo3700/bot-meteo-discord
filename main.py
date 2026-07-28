@@ -3,12 +3,12 @@ import threading
 from flask import Flask
 import discord
 
-# --- Mini serveur Web pour valider le port sur Render ---
+# --- Webserver pour Render ---
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot en ligne !"
+    return "Bot Météo en ligne !"
 
 def run_flask():
     port = int(os.environ.get("PORT", 10000))
@@ -16,7 +16,7 @@ def run_flask():
 
 threading.Thread(target=run_flask, daemon=True).start()
 
-# --- Code de test du Bot Discord ---
+# --- Bot Discord ---
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 
 intents = discord.Intents.default()
@@ -26,12 +26,12 @@ client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    print(f"🟢 TEST OK : Le bot est connecté sous le nom : {client.user}")
+    print(f"🟢 CONNECTÉ : Le bot est prêt sous le nom de : {client.user}")
 
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
-    print(f"🔔 MESSAGE DÉTECTÉ ! Salon: {message.channel.name} ({message.channel.id}) | Auteur: {message.author} | Contenu: {message.content}")
+    print(f"🔔 Message reçu de {message.author} dans #{message.channel}: {message.content}")
 
 client.run(DISCORD_TOKEN)
