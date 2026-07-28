@@ -2,6 +2,7 @@ import os
 import threading
 from flask import Flask
 import discord
+import google.generativeai as genai
 
 # --- Webserver pour Render ---
 app = Flask('')
@@ -15,6 +16,12 @@ def run_flask():
     app.run(host='0.0.0.0', port=port)
 
 threading.Thread(target=run_flask, daemon=True).start()
+
+# --- Configuration Gemini ---
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel('gemini-1.5-flash')
 
 # --- Bot Discord ---
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
@@ -30,19 +37,38 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    # Ignorer les messages du bot lui-même
+    # Ignorer les messages envoyés par le bot
     if message.author == client.user:
         return
 
     print(f"🔔 Message reçu de {message.author} : {message.content}")
 
-    # --- SUPPRESSION DU MESSAGE ---
+    if not GEMINI_API_KEY:
+        print("⚠️ Pas de clé GEMINI_API_KEY configurée dans Render.")
+        return
+
+    # Prompt envoyé à Gemini
+    prompt = f"""
+    Tu es un modérateur pour un serveur Discord sur la météo.
+    Analyse ce message : "{message.content}"
+    Est-ce que ce message parle de météo, de climat, de prévisions, de temps, de ciel, de température ou d'observations météo ?
+    Rends OUI si le message parle de météo.
+    Rends NON si le message ne parle PAS du tout de météo.
+    Affiche uniquement "OUI" ou "NON".
+    """
+
     try:
-        await message.delete()
-        print(f"🗑️ Message de {message.author} supprimé avec succès !")
-    except discord.Forbidden:
-        print("❌ Erreur : Le bot n'a pas la permission de supprimer des messages.")
+        response = model.generate_content(prompt)
+        decision = response.text.strip().upper()
+        print(f"🤖 Décision Gemini pour '{message.content}' : {decision}")
+
+        if "NON" in decision:
+            await message.delete()
+            print(f"🗑️ Message non-météo de {message.author} supprimé.")
+        else:
+            print(f"✅ Message météo conservé !")
+
     except Exception as e:
-        print(f"❌ Erreur lors de la suppression : {e}")
+        print(f"❌ Erreur lors de la vérification Gemini : {e}")
 
 client.run(DISCORD_TOKEN)
