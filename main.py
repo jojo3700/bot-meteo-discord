@@ -30,8 +30,19 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    # Ignorer les messages du bot lui-même
     if message.author == client.user:
         return
-    print(f"🔔 Message reçu de {message.author} dans #{message.channel}: {message.content}")
+
+    print(f"🔔 Message reçu de {message.author} : {message.content}")
+
+    # --- SUPPRESSION DU MESSAGE ---
+    try:
+        await message.delete()
+        print(f"🗑️ Message de {message.author} supprimé avec succès !")
+    except discord.Forbidden:
+        print("❌ Erreur : Le bot n'a pas la permission de supprimer des messages.")
+    except Exception as e:
+        print(f"❌ Erreur lors de la suppression : {e}")
 
 client.run(DISCORD_TOKEN)
